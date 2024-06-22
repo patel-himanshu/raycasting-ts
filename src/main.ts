@@ -30,14 +30,16 @@ context.scale(cell_width, cell_height);
 
 // Plotting the vertical grid lines
 for (let x = 0; x <= GRID_COLUMNS; x++) {
+	context.beginPath();
 	context.moveTo(x, 0);
 	context.lineTo(x, GRID_ROWS);
+	context.stroke();
 }
 
 // Plotting the horizontal grid lines
 for (let y = 0; y <= GRID_ROWS; y++) {
+	context.beginPath();
 	context.moveTo(0, y);
 	context.lineTo(GRID_COLUMNS, y);
+	context.stroke();
 }
-
-context.stroke();
