@@ -13,7 +13,6 @@ if (gameCanvas === null) {
 
 gameCanvas.width = CANVAS_DIMENSIONS;
 gameCanvas.height = CANVAS_DIMENSIONS;
-// console.log({ gameCanvas });
 
 const context = gameCanvas.getContext("2d");
 if (context === null) {
@@ -23,21 +22,22 @@ if (context === null) {
 context.fillStyle = CANVAS_BACKGROUND;
 context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 context.strokeStyle = CANVAS_LINES;
-// console.log({ context });
+context.lineWidth = 0.02;
 
 const cell_width = context.canvas.width / GRID_COLUMNS;
 const cell_height = context.canvas.height / GRID_ROWS;
+context.scale(cell_width, cell_height);
 
+// Plotting the vertical grid lines
 for (let x = 0; x <= GRID_COLUMNS; x++) {
-	context.moveTo(x * cell_width, 0);
-	context.lineTo(x * cell_width, context.canvas.height);
-	// context.stroke();
+	context.moveTo(x, 0);
+	context.lineTo(x, GRID_ROWS);
 }
 
+// Plotting the horizontal grid lines
 for (let y = 0; y <= GRID_ROWS; y++) {
-	context.moveTo(0, y * cell_height);
-	context.lineTo(context.canvas.width, y * cell_height);
-	// context.stroke();
+	context.moveTo(0, y);
+	context.lineTo(GRID_COLUMNS, y);
 }
 
 context.stroke();
