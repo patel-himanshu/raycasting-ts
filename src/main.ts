@@ -43,7 +43,9 @@ function renderGrid(
 		createCircle(context, point2, POINT_RADIUS, "orange");
 		createLine(context, point1, point2, LINE_WIDTH, "orange");
 
-		rayStep(context, point1, point2);
+		const point3 = rayStep(point1, point2);
+		createCircle(context, point3, POINT_RADIUS, "lightgreen");
+		createLine(context, point2, point3, LINE_WIDTH / 2, "lightgreen");
 	}
 }
 
@@ -62,7 +64,7 @@ if (context === null) {
 }
 
 // const point1 = new Vector2D(4.5, 1.5);
-const point1 = new Vector2D(GRID_COLUMNS * 0.6, GRID_ROWS * 0.45);
+const point1 = new Vector2D(GRID_COLUMNS * 0.5, GRID_ROWS * 0.5);
 let point2: Vector2D | undefined = undefined;
 
 gameCanvas.addEventListener("mousemove", (event) => {

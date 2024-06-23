@@ -1,5 +1,3 @@
-import { LINE_WIDTH, POINT_RADIUS } from "./constants";
-
 export class Vector2D {
 	x: number;
 	y: number;
@@ -91,11 +89,16 @@ function snap(component: number, deltaComponent: number): number {
 	else return component;
 }
 
-export function rayStep(
-	context: CanvasRenderingContext2D,
-	point1: Vector2D,
-	point2: Vector2D
-): Vector2D {
+/**
+ * Calculates the point on the grid's cell boundaries that is closest to the line connecting
+ * the given points. The function uses linear algebra to find the slope and intercept of the line,
+ * and then calculates the closest point on the vertical and horizontal cell boundaries.
+ *
+ * @param {Vector2D} point1 - The first point on the line.
+ * @param {Vector2D} point2 - The second point on the line.
+ * @return {Vector2D} The point on the grid's cell boundaries that is closest to the line.
+ */
+export function rayStep(point1: Vector2D, point2: Vector2D): Vector2D {
 	let point3 = point2;
 
 	// Linear equation: y = mx + c (where "m" = slope & "c" = intercept)
@@ -111,9 +114,6 @@ export function rayStep(
 		const y3 = slope * x3 + intercept;
 		point3 = new Vector2D(x3, y3);
 
-		createCircle(context, point3, POINT_RADIUS, "lightgreen");
-		createLine(context, point2, point3, LINE_WIDTH / 2, "lightgreen");
-
 		// Finding the closest point on the grid's horizontal cell boundary,
 		// which also lies on the line connecting "point1" and "point2"
 		if (slope !== 0) {
@@ -121,10 +121,11 @@ export function rayStep(
 			const x4 = (y4 - intercept) / slope;
 			const point4 = new Vector2D(x4, y4);
 
-			createCircle(context, point4, POINT_RADIUS, "violet");
-			createLine(context, point2, point4, LINE_WIDTH / 2, "violet");
+			if (point2.distanceTo(point3) > point2.distanceTo(point4)) {
+				point3 = point4;
+			}
 		}
 	}
 
-	return point2;
+	return point3;
 }
