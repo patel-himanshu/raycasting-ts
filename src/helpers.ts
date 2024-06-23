@@ -104,7 +104,13 @@ export function rayStep(point1: Vector2D, point2: Vector2D): Vector2D {
 	// Linear equation: y = mx + c (where "m" = slope & "c" = intercept)
 	const delta = point2.subtract(point1);
 
-	if (delta.x !== 0) {
+	if (delta.x === 0) {
+		// delta.x = 0 means slope is undefined
+		// Line is of the form: x = c (Line parallel to y-axis)
+		const y3 = snap(point2.y, delta.y);
+		const x3 = point2.x;
+		point3 = new Vector2D(x3, y3);
+	} else {
 		const slope = delta.y / delta.x; // m = dy/dx
 		const intercept = point1.y - slope * point1.x; // c = y - mx
 
@@ -114,9 +120,10 @@ export function rayStep(point1: Vector2D, point2: Vector2D): Vector2D {
 		const y3 = slope * x3 + intercept;
 		point3 = new Vector2D(x3, y3);
 
-		// Finding the closest point on the grid's horizontal cell boundary,
-		// which also lies on the line connecting "point1" and "point2"
+		// If slope != 0, then the line is not of the form: y = c (Line parallel to x-axis)
 		if (slope !== 0) {
+			// Finding the closest point on the grid's horizontal cell boundary,
+			// which also lies on the line connecting "point1" and "point2"
 			const y4 = snap(point2.y, delta.y);
 			const x4 = (y4 - intercept) / slope;
 			const point4 = new Vector2D(x4, y4);
