@@ -1,3 +1,4 @@
+import { createCircle, createLine, getCanvasSize } from "./canvas";
 import {
 	CANVAS_DIMENSIONS,
 	CANVAS_BACKGROUND,
@@ -6,14 +7,8 @@ import {
 	POINT_RADIUS,
 	LINE_WIDTH,
 } from "./constants";
-import {
-	createCircle,
-	createLine,
-	getCanvasSize,
-	hittingCellCorner,
-	rayStep,
-	Vector2D,
-} from "./helpers";
+import { hittingCellCorner, rayStep } from "./helpers";
+import { Vector2D } from "./model";
 
 function renderGrid(
 	context: CanvasRenderingContext2D,
