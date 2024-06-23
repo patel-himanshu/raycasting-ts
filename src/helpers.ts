@@ -1,3 +1,5 @@
+import { LINE_WIDTH, POINT_RADIUS } from "./constants";
+
 export class Vector2D {
 	x: number;
 	y: number;
@@ -70,17 +72,25 @@ export function createCircle(
 	context.fill();
 }
 
-// - Used to snap the point to the closest point on the grid
-// 	 If the point is already on the grid, it is returned as it is
-// - Can be used for either of the components of the "Vector2D" class
-// - "deltaComponent" denotes the direction of the component
+/**
+ * Snaps the given component of the "Vector2D" object to the closest point on the grid axis.
+ * If the component is already on the grid, it is returned as it is.
+ *
+ * @param {number} component - The component of the "Vector2D" object to snap.
+ * @param {number} deltaComponent - The direction of the component of the "Vector2D" object.
+ * @return {number} The snapped component.
+ */
 function snap(component: number, deltaComponent: number): number {
 	if (deltaComponent > 0) return Math.ceil(component);
 	else if (deltaComponent < 0) return Math.floor(component);
 	else return component;
 }
 
-export function rayStep(point1: Vector2D, point2: Vector2D): Vector2D {
+export function rayStep(
+	context: CanvasRenderingContext2D,
+	point1: Vector2D,
+	point2: Vector2D
+): Vector2D {
 	// Linear equation: y = mx + c
 	const delta = point2.subtract(point1);
 
@@ -91,8 +101,9 @@ export function rayStep(point1: Vector2D, point2: Vector2D): Vector2D {
 		// Finding the closest point on the grid, which also lies on the line
 		const x3 = snap(point2.x, delta.x);
 		const y3 = slope * x3 + intercept;
-
-		return new Vector2D(x3, y3);
+		const pointOnYAxis = new Vector2D(x3, y3);
+		createCircle(context, pointOnYAxis, POINT_RADIUS, "lightgreen");
+		createLine(context, point2, pointOnYAxis, LINE_WIDTH, "lightgreen");
 	}
 
 	const directionVector = point2.subtract(point1).normalize();

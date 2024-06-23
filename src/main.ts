@@ -1,16 +1,18 @@
 import {
+	CANVAS_DIMENSIONS,
+	CANVAS_BACKGROUND,
+	GRID_ROWS,
+	GRID_COLUMNS,
+	POINT_RADIUS,
+	LINE_WIDTH,
+} from "./constants";
+import {
 	createCircle,
 	createLine,
 	getCanvasSize,
 	rayStep,
 	Vector2D,
 } from "./helpers";
-
-const CANVAS_DIMENSIONS = 400;
-const CANVAS_BACKGROUND = "#3b3b3b";
-const GRID_ROWS = 10;
-const GRID_COLUMNS = 10;
-const POINT_RADIUS = 0.2;
 
 function renderGrid(
 	context: CanvasRenderingContext2D,
@@ -39,11 +41,9 @@ function renderGrid(
 
 	if (point2 !== undefined) {
 		createCircle(context, point2, POINT_RADIUS, "orange");
-		createLine(context, point1, point2, 0.1, "orange");
+		createLine(context, point1, point2, LINE_WIDTH, "orange");
 
-		const point3 = rayStep(point1, point2);
-		createCircle(context, point3, POINT_RADIUS, "lightgreen");
-		createLine(context, point2, point3, 0.1, "lightgreen");
+		const point3 = rayStep(context, point1, point2);
 	}
 }
 
