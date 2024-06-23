@@ -1,3 +1,5 @@
+import { EPSILON } from "./constants";
+
 export class Vector2D {
 	x: number;
 	y: number;
@@ -83,10 +85,20 @@ export function createCircle(
  * @param {number} deltaComponent - The direction of the component of the "Vector2D" object.
  * @return {number} The snapped component.
  */
-function snap(component: number, deltaComponent: number): number {
-	if (deltaComponent > 0) return Math.ceil(component);
-	else if (deltaComponent < 0) return Math.floor(component);
-	else return component;
+function snap(
+	component: number,
+	deltaComponent: number,
+	epsilon: number = EPSILON
+): number {
+	const smallDeviation = Math.sign(deltaComponent) * epsilon;
+
+	if (deltaComponent > 0) {
+		return Math.ceil(component + smallDeviation);
+	} else if (deltaComponent < 0) {
+		return Math.floor(component + smallDeviation);
+	} else {
+		return component;
+	}
 }
 
 /**

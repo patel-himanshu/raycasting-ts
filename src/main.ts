@@ -16,6 +16,7 @@ import {
 
 function renderGrid(
 	context: CanvasRenderingContext2D,
+	point1: Vector2D,
 	point2: Vector2D | undefined
 ) {
 	context.reset();
@@ -40,31 +41,30 @@ function renderGrid(
 	createCircle(context, point1, POINT_RADIUS, "orange");
 
 	if (point2 !== undefined) {
-		createCircle(context, point2, POINT_RADIUS, "orange");
-		createLine(context, point1, point2, LINE_WIDTH, "orange");
+		for (let i = 0; i < 3; i++) {
+			createCircle(context, point2, POINT_RADIUS, "orange");
+			createLine(context, point1, point2, LINE_WIDTH, "orange");
 
-		const point3 = rayStep(point1, point2);
-		createCircle(context, point3, POINT_RADIUS, "lightgreen");
-		createLine(context, point2, point3, LINE_WIDTH / 2, "lightgreen");
+			const point3 = rayStep(point1, point2);
+
+			point1 = point2;
+			point2 = point3;
+		}
 	}
 }
 
 const gameCanvas = document.getElementById("game") as HTMLCanvasElement | null;
 
-if (gameCanvas === null) {
-	throw new Error("No canvas with id 'game' was found");
-}
+if (gameCanvas === null) throw new Error("No canvas with id 'game' was found");
 
 gameCanvas.width = CANVAS_DIMENSIONS;
 gameCanvas.height = CANVAS_DIMENSIONS;
 
 const context = gameCanvas.getContext("2d");
-if (context === null) {
-	throw new Error("2D context is not supported in this browser");
-}
+if (context === null) throw new Error("Browser doesn't support 2D context");
 
-// const point1 = new Vector2D(4.5, 1.5);
-const point1 = new Vector2D(GRID_COLUMNS * 0.5, GRID_ROWS * 0.5);
+// const point1 = new Vector2D(4.5, 5);
+const point1 = new Vector2D(GRID_COLUMNS * 0.45, GRID_ROWS * 0.5);
 let point2: Vector2D | undefined = undefined;
 
 gameCanvas.addEventListener("mousemove", (event) => {
@@ -72,7 +72,7 @@ gameCanvas.addEventListener("mousemove", (event) => {
 		.divide(getCanvasSize(context))
 		.multiply(new Vector2D(GRID_COLUMNS, GRID_ROWS));
 
-	renderGrid(context, point2);
+	renderGrid(context, point1, point2);
 });
 
-renderGrid(context, point2); // Necessary for first render, when point2 is undefined
+renderGrid(context, point1, point2); // Necessary for first render, when point2 is undefined
