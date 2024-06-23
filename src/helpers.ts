@@ -69,3 +69,8 @@ export function createCircle(
 	context.arc(point.x, point.y, radius, 0, 2 * Math.PI);
 	context.fill();
 }
+
+export function rayStep(point1: Vector2D, point2: Vector2D): Vector2D {
+	const directionVector = point2.subtract(point1).normalize();
+	return directionVector.add(point2);
+}
