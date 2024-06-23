@@ -43,7 +43,7 @@ function renderGrid(
 		createCircle(context, point2, POINT_RADIUS, "orange");
 		createLine(context, point1, point2, LINE_WIDTH, "orange");
 
-		const point3 = rayStep(context, point1, point2);
+		rayStep(context, point1, point2);
 	}
 }
 
@@ -61,8 +61,8 @@ if (context === null) {
 	throw new Error("2D context is not supported in this browser");
 }
 
-const point1 = new Vector2D(4.5, 1.5);
-// const point1 = new Vector2D(GRID_COLUMNS * 0.93, GRID_ROWS * 0.55);
+// const point1 = new Vector2D(4.5, 1.5);
+const point1 = new Vector2D(GRID_COLUMNS * 0.6, GRID_ROWS * 0.45);
 let point2: Vector2D | undefined = undefined;
 
 gameCanvas.addEventListener("mousemove", (event) => {

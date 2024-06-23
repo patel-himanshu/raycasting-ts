@@ -38,6 +38,11 @@ export class Vector2D {
 	scale(factor: number): Vector2D {
 		return new Vector2D(this.x * factor, this.y * factor);
 	}
+
+	distanceTo(that: Vector2D): number {
+		// return Math.sqrt((this.x - that.x) ** 2 + (this.y - that.y) ** 2);
+		return this.subtract(that).length();
+	}
 }
 
 export function getCanvasSize(context: CanvasRenderingContext2D): Vector2D {
@@ -73,7 +78,7 @@ export function createCircle(
 }
 
 /**
- * Snaps the given component of the "Vector2D" object to the closest point on the grid axis.
+ * Snaps the given component of the "Vector2D" object to the closest point on the grid's cell boundaries.
  * If the component is already on the grid, it is returned as it is.
  *
  * @param {number} component - The component of the "Vector2D" object to snap.
@@ -91,21 +96,35 @@ export function rayStep(
 	point1: Vector2D,
 	point2: Vector2D
 ): Vector2D {
-	// Linear equation: y = mx + c
+	let point3 = point2;
+
+	// Linear equation: y = mx + c (where "m" = slope & "c" = intercept)
 	const delta = point2.subtract(point1);
 
 	if (delta.x !== 0) {
 		const slope = delta.y / delta.x; // m = dy/dx
 		const intercept = point1.y - slope * point1.x; // c = y - mx
 
-		// Finding the closest point on the grid, which also lies on the line
+		// Finding the closest point on the grid's vertical cell boundary,
+		// which also lies on the line connecting "point1" and "point2"
 		const x3 = snap(point2.x, delta.x);
 		const y3 = slope * x3 + intercept;
-		const pointOnYAxis = new Vector2D(x3, y3);
-		createCircle(context, pointOnYAxis, POINT_RADIUS, "lightgreen");
-		createLine(context, point2, pointOnYAxis, LINE_WIDTH, "lightgreen");
+		point3 = new Vector2D(x3, y3);
+
+		createCircle(context, point3, POINT_RADIUS, "lightgreen");
+		createLine(context, point2, point3, LINE_WIDTH / 2, "lightgreen");
+
+		// Finding the closest point on the grid's horizontal cell boundary,
+		// which also lies on the line connecting "point1" and "point2"
+		if (slope !== 0) {
+			const y4 = snap(point2.y, delta.y);
+			const x4 = (y4 - intercept) / slope;
+			const point4 = new Vector2D(x4, y4);
+
+			createCircle(context, point4, POINT_RADIUS, "violet");
+			createLine(context, point2, point4, LINE_WIDTH / 2, "violet");
+		}
 	}
 
-	const directionVector = point2.subtract(point1).normalize();
-	return directionVector.add(point2);
+	return point2;
 }
