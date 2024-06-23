@@ -3,5 +3,5 @@ export const CANVAS_BACKGROUND = "#3b3b3b";
 export const EPSILON = 1e-3;
 export const GRID_ROWS = 10;
 export const GRID_COLUMNS = 10;
-export const LINE_WIDTH = 0.1;
-export const POINT_RADIUS = 0.2;
+export const LINE_WIDTH = 0.02;
+export const POINT_RADIUS = 0.12;

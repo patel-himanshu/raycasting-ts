@@ -85,12 +85,8 @@ export function createCircle(
  * @param {number} deltaComponent - The direction of the component of the "Vector2D" object.
  * @return {number} The snapped component.
  */
-function snap(
-	component: number,
-	deltaComponent: number,
-	epsilon: number = EPSILON
-): number {
-	const smallDeviation = Math.sign(deltaComponent) * epsilon;
+function snap(component: number, deltaComponent: number): number {
+	const smallDeviation = Math.sign(deltaComponent) * EPSILON;
 
 	if (deltaComponent > 0) {
 		return Math.ceil(component + smallDeviation);
@@ -99,6 +95,23 @@ function snap(
 	} else {
 		return component;
 	}
+}
+
+/**
+ * Calculates the coordinate of 1 of the cell's 4 corners, in which the ray currently resides.
+ *
+ * @param {Vector2D} point1 - The starting point of the line segment.
+ * @param {Vector2D} point2 - The ending point of the line segment.
+ * @return {Vector2D} 1 of the corner coordinate of the cell in which the ray resides or touches.
+ */
+export function hittingCellCorner(
+	point1: Vector2D,
+	point2: Vector2D
+): Vector2D {
+	const delta = point2.subtract(point1);
+	const x = Math.floor(point2.x + Math.sign(delta.x) * EPSILON);
+	const y = Math.floor(point2.y + Math.sign(delta.y) * EPSILON);
+	return new Vector2D(x, y);
 }
 
 /**

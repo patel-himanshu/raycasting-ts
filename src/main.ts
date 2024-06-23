@@ -10,6 +10,7 @@ import {
 	createCircle,
 	createLine,
 	getCanvasSize,
+	hittingCellCorner,
 	rayStep,
 	Vector2D,
 } from "./helpers";
@@ -41,9 +42,21 @@ function renderGrid(
 	createCircle(context, point1, POINT_RADIUS, "orange");
 
 	if (point2 !== undefined) {
-		for (let i = 0; i < 3; i++) {
+		for (;;) {
 			createCircle(context, point2, POINT_RADIUS, "orange");
 			createLine(context, point1, point2, LINE_WIDTH, "orange");
+
+			const cell = hittingCellCorner(point1, point2);
+
+			// Check if the cell hitting the ray is out of the grid
+			if (
+				cell.x < 0 ||
+				cell.x >= GRID_SIZE.x ||
+				cell.y < 0 ||
+				cell.y >= GRID_SIZE.y
+			) {
+				break;
+			}
 
 			const point3 = rayStep(point1, point2);
 
@@ -63,13 +76,15 @@ gameCanvas.height = CANVAS_DIMENSIONS;
 const context = gameCanvas.getContext("2d");
 if (context === null) throw new Error("Browser doesn't support 2D context");
 
+const GRID_SIZE = getCanvasSize(context);
+
 // const point1 = new Vector2D(4.5, 5);
 const point1 = new Vector2D(GRID_COLUMNS * 0.45, GRID_ROWS * 0.5);
 let point2: Vector2D | undefined = undefined;
 
 gameCanvas.addEventListener("mousemove", (event) => {
 	point2 = new Vector2D(event.offsetX, event.offsetY)
-		.divide(getCanvasSize(context))
+		.divide(GRID_SIZE)
 		.multiply(new Vector2D(GRID_COLUMNS, GRID_ROWS));
 
 	renderGrid(context, point1, point2);
