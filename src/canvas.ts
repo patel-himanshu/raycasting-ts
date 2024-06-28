@@ -28,6 +28,18 @@ export function createLine(
 	context.stroke();
 }
 
+export function createRectangle(
+	context: CanvasRenderingContext2D,
+	startingPointX: number,
+	startingPointY: number,
+	width: number,
+	height: number,
+	fillColor: string
+) {
+	context.fillStyle = fillColor;
+	context.fillRect(startingPointX, startingPointY, width, height);
+}
+
 export function getCanvasSize(context: CanvasRenderingContext2D): Vector2D {
 	return new Vector2D(context.canvas.width, context.canvas.height);
 }

@@ -1,4 +1,9 @@
-import { createCircle, createLine, getCanvasSize } from "./canvas";
+import {
+	createCircle,
+	createLine,
+	createRectangle,
+	getCanvasSize,
+} from "./canvas";
 import {
 	CANVAS_DIMENSIONS,
 	CANVAS_BACKGROUND,
@@ -24,6 +29,14 @@ function renderGrid(
 	const cell_height = context.canvas.height / GRID_ROWS;
 	context.scale(cell_width, cell_height);
 
+	for (let row = 0; row < GRID_ROWS; row++) {
+		for (let column = 0; column < GRID_COLUMNS; column++) {
+			if (scene[row][column] !== 0) {
+				createRectangle(context, column, row, 1, 1, "grey");
+			}
+		}
+	}
+
 	// Plotting the vertical grid lines
 	for (let x = 0; x <= GRID_COLUMNS; x++) {
 		createLine(context, new Vector2D(x, 0), new Vector2D(x, GRID_ROWS));
@@ -48,7 +61,8 @@ function renderGrid(
 				cell.x < 0 ||
 				cell.x >= GRID_SIZE.x ||
 				cell.y < 0 ||
-				cell.y >= GRID_SIZE.y
+				cell.y >= GRID_SIZE.y ||
+				scene[cell.y][cell.x] !== 0
 			) {
 				break;
 			}
@@ -72,6 +86,17 @@ const context = gameCanvas.getContext("2d");
 if (context === null) throw new Error("Browser doesn't support 2D context");
 
 const GRID_SIZE = getCanvasSize(context);
+const scene = Array(GRID_ROWS)
+	.fill(0)
+	.map(() => Array(GRID_COLUMNS).fill(0));
+
+// Adding walls to the scene
+scene[1][1] = 1;
+scene[7][4] = 1;
+scene[1][2] = 1;
+scene[2][7] = 1;
+scene[2][8] = 1;
+scene[3][8] = 1;
 
 // const point1 = new Vector2D(4.5, 5);
 const point1 = new Vector2D(GRID_COLUMNS * 0.45, GRID_ROWS * 0.5);
