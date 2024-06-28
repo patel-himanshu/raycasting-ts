@@ -29,10 +29,13 @@ function renderGrid(
 	const cell_height = context.canvas.height / GRID_ROWS;
 	context.scale(cell_width, cell_height);
 
-	for (let row = 0; row < GRID_ROWS; row++) {
-		for (let column = 0; column < GRID_COLUMNS; column++) {
-			if (scene[row][column] !== 0) {
-				createRectangle(context, column, row, 1, 1, "grey");
+	// Origin is the top-left corner of the grid
+	// Left to right is the movement in the positive x-axis
+	// Top to bottom is the movement in the positive y-axis
+	for (let y = 0; y < GRID_ROWS; y++) {
+		for (let x = 0; x < GRID_COLUMNS; x++) {
+			if (scene[y][x] !== 0) {
+				createRectangle(context, x, y, 1, 1, "grey");
 			}
 		}
 	}
@@ -86,7 +89,7 @@ const context = gameCanvas.getContext("2d");
 if (context === null) throw new Error("Browser doesn't support 2D context");
 
 const GRID_SIZE = getCanvasSize(context);
-const scene = Array(GRID_ROWS)
+const scene: Array<Array<number>> = Array(GRID_ROWS)
 	.fill(0)
 	.map(() => Array(GRID_COLUMNS).fill(0));
 
