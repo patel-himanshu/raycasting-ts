@@ -1,4 +1,4 @@
-import { Vector2D } from "./model";
+import { Vector2D } from "./models";
 
 export function createCircle(
 	context: CanvasRenderingContext2D,

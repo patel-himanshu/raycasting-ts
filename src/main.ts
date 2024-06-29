@@ -13,7 +13,7 @@ import {
 	LINE_WIDTH,
 } from "./constants";
 import { hittingCellCorner, rayStep } from "./helpers";
-import { Vector2D } from "./model";
+import { Vector2D } from "./models";
 
 function renderGrid(
 	context: CanvasRenderingContext2D,

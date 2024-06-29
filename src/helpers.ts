@@ -1,5 +1,5 @@
 import { EPSILON } from "./constants";
-import { Vector2D } from "./model";
+import { Vector2D } from "./models";
 
 /**
  * Snaps the given component of the "Vector2D" object to the closest point on the grid's cell boundaries.
