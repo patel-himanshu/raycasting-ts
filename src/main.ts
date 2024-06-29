@@ -21,7 +21,7 @@ function sceneSize(scene: Scene): Vector2D {
 	return new Vector2D(columns, rows);
 }
 
-function renderGrid(
+function renderMinimap(
 	context: CanvasRenderingContext2D,
 	scene: Scene,
 	point1: Vector2D,
@@ -39,8 +39,8 @@ function renderGrid(
 
 	const cellSize = minimapSize.divide(gridSize);
 	const [cellWidth, cellHeight] = [cellSize.x, cellSize.y];
-	context.scale(cellWidth, cellHeight);
 	context.translate(position.x, position.y);
+	context.scale(cellWidth, cellHeight);
 
 	// Origin is the top-left corner of the grid
 	// Left to right is the movement in the positive x-axis
@@ -96,16 +96,15 @@ function renderGrid(
 		"game"
 	) as HTMLCanvasElement | null;
 
-	if (gameCanvas === null)
-		throw new Error("No canvas with id 'game' was found");
+	if (gameCanvas === null) {
+		throw new Error("No canvas with ID 'game' was found");
+	}
 
 	gameCanvas.width = CANVAS_DIMENSIONS;
 	gameCanvas.height = CANVAS_DIMENSIONS;
 
 	const context = gameCanvas.getContext("2d");
 	if (context === null) throw new Error("Browser doesn't support 2D context");
-
-	const canvasSize = getCanvasSize(context);
 
 	const scene: Scene = [
 		[0, 0, 0, 0, 0, 0, 0, 0],
@@ -122,14 +121,26 @@ function renderGrid(
 
 	let point2: Vector2D | undefined = undefined;
 
+	const canvasSize = getCanvasSize(context);
+	const minimapPosition = new Vector2D().add(canvasSize).scale(0.025);
+	const minimapSize = canvasSize.scale(0.5);
+
 	gameCanvas.addEventListener("mousemove", (event) => {
 		point2 = new Vector2D(event.offsetX, event.offsetY)
-			.divide(canvasSize)
+			.subtract(minimapPosition)
+			.divide(minimapSize)
 			.multiply(sceneSize(scene));
 
-		renderGrid(context, scene, point1, point2, new Vector2D(), canvasSize);
+		renderMinimap(
+			context,
+			scene,
+			point1,
+			point2,
+			minimapPosition,
+			minimapSize
+		);
 	});
 
 	// Necessary for first render, when point2 is undefined
-	renderGrid(context, scene, point1, point2, new Vector2D(), canvasSize);
+	renderMinimap(context, scene, point1, point2, minimapPosition, minimapSize);
 })();
