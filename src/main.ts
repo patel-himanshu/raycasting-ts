@@ -7,33 +7,46 @@ import {
 import {
 	CANVAS_DIMENSIONS,
 	CANVAS_BACKGROUND,
-	GRID_ROWS,
-	GRID_COLUMNS,
 	POINT_RADIUS,
 	LINE_WIDTH,
 } from "./constants";
 import { hittingCellCorner, rayStep } from "./helpers";
-import { Vector2D } from "./models";
+import { Scene, Vector2D } from "./models";
+
+function sceneSize(scene: Scene): Vector2D {
+	const rows = scene.length;
+	const columns = scene.reduce((maxColumns, row) => {
+		return Math.max(maxColumns, row.length);
+	}, 0);
+	return new Vector2D(columns, rows);
+}
 
 function renderGrid(
 	context: CanvasRenderingContext2D,
+	scene: Scene,
 	point1: Vector2D,
-	point2: Vector2D | undefined
+	point2: Vector2D | undefined,
+	position: Vector2D,
+	minimapSize: Vector2D
 ) {
 	context.reset();
 
 	context.fillStyle = CANVAS_BACKGROUND;
 	context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
-	const cell_width = context.canvas.width / GRID_COLUMNS;
-	const cell_height = context.canvas.height / GRID_ROWS;
-	context.scale(cell_width, cell_height);
+	const gridSize = sceneSize(scene);
+	const [gridColumns, gridRows] = [gridSize.x, gridSize.y];
+
+	const cellSize = minimapSize.divide(gridSize);
+	const [cellWidth, cellHeight] = [cellSize.x, cellSize.y];
+	context.scale(cellWidth, cellHeight);
+	context.translate(position.x, position.y);
 
 	// Origin is the top-left corner of the grid
 	// Left to right is the movement in the positive x-axis
 	// Top to bottom is the movement in the positive y-axis
-	for (let y = 0; y < GRID_ROWS; y++) {
-		for (let x = 0; x < GRID_COLUMNS; x++) {
+	for (let y = 0; y < gridRows; y++) {
+		for (let x = 0; x < gridColumns; x++) {
 			if (scene[y][x] !== 0) {
 				createRectangle(context, x, y, 1, 1, "grey");
 			}
@@ -41,13 +54,13 @@ function renderGrid(
 	}
 
 	// Plotting the vertical grid lines
-	for (let x = 0; x <= GRID_COLUMNS; x++) {
-		createLine(context, new Vector2D(x, 0), new Vector2D(x, GRID_ROWS));
+	for (let x = 0; x <= gridColumns; x++) {
+		createLine(context, new Vector2D(x, 0), new Vector2D(x, gridRows));
 	}
 
 	// Plotting the horizontal grid lines
-	for (let y = 0; y <= GRID_ROWS; y++) {
-		createLine(context, new Vector2D(0, y), new Vector2D(GRID_COLUMNS, y));
+	for (let y = 0; y <= gridRows; y++) {
+		createLine(context, new Vector2D(0, y), new Vector2D(gridColumns, y));
 	}
 
 	createCircle(context, point1, POINT_RADIUS, "orange");
@@ -62,9 +75,9 @@ function renderGrid(
 			// Check if the cell hitting the ray is out of the grid
 			if (
 				cell.x < 0 ||
-				cell.x >= GRID_SIZE.x ||
+				cell.x >= gridSize.x ||
 				cell.y < 0 ||
-				cell.y >= GRID_SIZE.y ||
+				cell.y >= gridSize.y ||
 				scene[cell.y][cell.x] !== 0
 			) {
 				break;
@@ -78,39 +91,45 @@ function renderGrid(
 	}
 }
 
-const gameCanvas = document.getElementById("game") as HTMLCanvasElement | null;
+(() => {
+	const gameCanvas = document.getElementById(
+		"game"
+	) as HTMLCanvasElement | null;
 
-if (gameCanvas === null) throw new Error("No canvas with id 'game' was found");
+	if (gameCanvas === null)
+		throw new Error("No canvas with id 'game' was found");
 
-gameCanvas.width = CANVAS_DIMENSIONS;
-gameCanvas.height = CANVAS_DIMENSIONS;
+	gameCanvas.width = CANVAS_DIMENSIONS;
+	gameCanvas.height = CANVAS_DIMENSIONS;
 
-const context = gameCanvas.getContext("2d");
-if (context === null) throw new Error("Browser doesn't support 2D context");
+	const context = gameCanvas.getContext("2d");
+	if (context === null) throw new Error("Browser doesn't support 2D context");
 
-const GRID_SIZE = getCanvasSize(context);
-const scene: Array<Array<number>> = Array(GRID_ROWS)
-	.fill(0)
-	.map(() => Array(GRID_COLUMNS).fill(0));
+	const canvasSize = getCanvasSize(context);
 
-// Adding walls to the scene
-scene[1][1] = 1;
-scene[7][4] = 1;
-scene[1][2] = 1;
-scene[2][7] = 1;
-scene[2][8] = 1;
-scene[3][8] = 1;
+	const scene: Scene = [
+		[0, 0, 0, 0, 0, 0, 0, 0],
+		[0, 1, 1, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 1, 1, 0],
+		[0, 0, 0, 0, 0, 0, 1, 0],
+		[0, 0, 0, 0, 0, 0, 0, 0],
+		[0, 1, 0, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 0, 0, 0],
+	];
 
-// const point1 = new Vector2D(4.5, 5);
-const point1 = new Vector2D(GRID_COLUMNS * 0.45, GRID_ROWS * 0.5);
-let point2: Vector2D | undefined = undefined;
+	const point1 = new Vector2D(0.45, 0.5).multiply(sceneSize(scene));
 
-gameCanvas.addEventListener("mousemove", (event) => {
-	point2 = new Vector2D(event.offsetX, event.offsetY)
-		.divide(GRID_SIZE)
-		.multiply(new Vector2D(GRID_COLUMNS, GRID_ROWS));
+	let point2: Vector2D | undefined = undefined;
 
-	renderGrid(context, point1, point2);
-});
+	gameCanvas.addEventListener("mousemove", (event) => {
+		point2 = new Vector2D(event.offsetX, event.offsetY)
+			.divide(canvasSize)
+			.multiply(sceneSize(scene));
 
-renderGrid(context, point1, point2); // Necessary for first render, when point2 is undefined
+		renderGrid(context, scene, point1, point2, new Vector2D(), canvasSize);
+	});
+
+	// Necessary for first render, when point2 is undefined
+	renderGrid(context, scene, point1, point2, new Vector2D(), canvasSize);
+})();
