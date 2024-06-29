@@ -4,12 +4,7 @@ import {
 	createRectangle,
 	getCanvasSize,
 } from "./canvas";
-import {
-	CANVAS_DIMENSIONS,
-	CANVAS_BACKGROUND,
-	POINT_RADIUS,
-	LINE_WIDTH,
-} from "./constants";
+import { CANVAS_BACKGROUND, POINT_RADIUS, LINE_WIDTH } from "./constants";
 import { hittingCellCorner, rayStep } from "./helpers";
 import { Scene, Vector2D } from "./models";
 
@@ -26,8 +21,8 @@ function renderMinimap(
 	scene: Scene,
 	point1: Vector2D,
 	point2: Vector2D | undefined,
-	position: Vector2D,
-	minimapSize: Vector2D
+	offset: Vector2D,
+	size: Vector2D
 ) {
 	context.reset();
 
@@ -37,9 +32,9 @@ function renderMinimap(
 	const gridSize = sceneSize(scene);
 	const [gridColumns, gridRows] = [gridSize.x, gridSize.y];
 
-	const cellSize = minimapSize.divide(gridSize);
+	const cellSize = size.divide(gridSize);
 	const [cellWidth, cellHeight] = [cellSize.x, cellSize.y];
-	context.translate(position.x, position.y);
+	context.translate(offset.x, offset.y);
 	context.scale(cellWidth, cellHeight);
 
 	// Origin is the top-left corner of the grid
@@ -100,34 +95,34 @@ function renderMinimap(
 		throw new Error("No canvas with ID 'game' was found");
 	}
 
-	gameCanvas.width = CANVAS_DIMENSIONS;
-	gameCanvas.height = CANVAS_DIMENSIONS;
+	const CANVAS_SIZE_FACTOR = 120;
+	gameCanvas.width = 4 * CANVAS_SIZE_FACTOR;
+	gameCanvas.height = 3 * CANVAS_SIZE_FACTOR;
 
 	const context = gameCanvas.getContext("2d");
 	if (context === null) throw new Error("Browser doesn't support 2D context");
 
 	const scene: Scene = [
-		[0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 1, 1, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 1, 1, 0],
-		[0, 0, 0, 0, 0, 0, 1, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 1, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		[0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 1, 1, 0, 0, 0],
+		[0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		[0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	];
 
 	const point1 = new Vector2D(0.45, 0.5).multiply(sceneSize(scene));
-
 	let point2: Vector2D | undefined = undefined;
 
 	const canvasSize = getCanvasSize(context);
-	const minimapPosition = new Vector2D().add(canvasSize).scale(0.025);
-	const minimapSize = canvasSize.scale(0.5);
+	const minimapOffset = new Vector2D().add(canvasSize).scale(0.025);
+	const minimapSize = sceneSize(scene).scale(context.canvas.width * 0.05);
 
 	gameCanvas.addEventListener("mousemove", (event) => {
 		point2 = new Vector2D(event.offsetX, event.offsetY)
-			.subtract(minimapPosition)
+			.subtract(minimapOffset)
 			.divide(minimapSize)
 			.multiply(sceneSize(scene));
 
@@ -136,11 +131,11 @@ function renderMinimap(
 			scene,
 			point1,
 			point2,
-			minimapPosition,
+			minimapOffset,
 			minimapSize
 		);
 	});
 
 	// Necessary for first render, when point2 is undefined
-	renderMinimap(context, scene, point1, point2, minimapPosition, minimapSize);
+	renderMinimap(context, scene, point1, point2, minimapOffset, minimapSize);
 })();
