@@ -9,7 +9,6 @@ import {
 	POINT_RADIUS,
 	LINE_WIDTH,
 	SCREEN_WIDTH,
-	FAR_CLIPPING_PLANE,
 	PLAYER_STEP_LENGTH,
 } from "./constants";
 import {
@@ -36,20 +35,24 @@ function renderPlayerPerspective(
 		);
 		const cell = hittingCellCorner(player.position, point);
 
-		if (isPointInsideScene(scene, cell) && scene[cell.y][cell.x] !== 0) {
-			const t =
-				1 -
-				point.subtract(player.position).length() / FAR_CLIPPING_PLANE;
-			const stripHeight = t * context.canvas.height;
+		if (isPointInsideScene(scene, cell)) {
+			const color = scene[cell.y][cell.x];
 
-			createRectangle(
-				context,
-				x * stripWidth,
-				(context.canvas.height - stripHeight) * 0.5,
-				stripWidth,
-				stripHeight,
-				`rgba(${255 * t}, 0, 0, 1)`
-			);
+			if (color !== null) {
+				const vector = point.subtract(player.position);
+				const directionVector = Vector2D.angle(player.direction);
+				const stripHeight =
+					context.canvas.height / vector.dotProduct(directionVector);
+
+				createRectangle(
+					context,
+					x * stripWidth,
+					(context.canvas.height - stripHeight) * 0.5,
+					stripWidth,
+					stripHeight,
+					color
+				);
+			}
 		}
 	}
 }
@@ -78,8 +81,9 @@ function renderMinimap(
 	// Top to bottom is the movement in the positive y-axis
 	for (let y = 0; y < gridRows; y++) {
 		for (let x = 0; x < gridColumns; x++) {
-			if (scene[y][x] !== 0) {
-				createRectangle(context, x, y, 1, 1, "grey");
+			const color = scene[y][x];
+			if (color !== null) {
+				createRectangle(context, x, y, 1, 1, color);
 			}
 		}
 	}
@@ -134,14 +138,14 @@ function renderGame(
 	if (context === null) throw new Error("Browser doesn't support 2D context");
 
 	const scene: Scene = [
-		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 1, 1, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		[null, null, null, null, null, null, null, null, null, null],
+		[null, "red", "red", null, null, null, null, null, null, null],
+		[null, null, null, null, null, "orange", "white", null, null, null],
+		[null, null, null, null, null, null, "blue", null, null, null],
+		[null, null, null, null, null, null, null, null, null, null],
+		[null, "yellow", null, null, null, null, null, null, null, null],
+		[null, null, null, null, null, null, null, null, null, null],
+		[null, null, null, null, null, null, null, null, null, null],
 	];
 	const sceneSize = getSceneSize(scene);
 
@@ -173,12 +177,12 @@ function renderGame(
 				break;
 			}
 			case "KeyA": {
-				player.direction -= Math.PI * 0.01;
+				player.direction -= Math.PI * 0.05;
 				renderGame(context, scene, player, minimapOffset, minimapSize);
 				break;
 			}
 			case "KeyD": {
-				player.direction += Math.PI * 0.01;
+				player.direction += Math.PI * 0.05;
 				renderGame(context, scene, player, minimapOffset, minimapSize);
 				break;
 			}

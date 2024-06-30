@@ -1,5 +1,5 @@
 export const CANVAS_BACKGROUND = "#3b3b3b";
-export const EPSILON = 1e-3;
+export const EPSILON = 1e-6;
 export const FAR_CLIPPING_PLANE = 12.0;
 export const FOV = Math.PI * (60 / 180);
 export const LINE_WIDTH = 0.05;

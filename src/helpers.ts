@@ -111,7 +111,7 @@ export function castRay(
 ): Vector2D {
 	for (;;) {
 		const cell = hittingCellCorner(point1, point2);
-		if (!isPointInsideScene(scene, cell) || scene[cell.y][cell.x] !== 0)
+		if (!isPointInsideScene(scene, cell) || scene[cell.y][cell.x] !== null)
 			break;
 
 		const point3 = rayStep(point1, point2);
@@ -120,4 +120,17 @@ export function castRay(
 	}
 
 	return point2;
+}
+
+export function distanceBetweenPointAndLine(
+	point1: Vector2D,
+	point2: Vector2D,
+	point3: Vector2D
+): number {
+	const a = point2.y - point1.y;
+	const b = point1.x - point2.x;
+	const c = point2.x * point1.y - point1.x * point2.y;
+	const distance =
+		Math.abs(a * point3.x + b * point3.y + c) / Math.sqrt(a ** 2 + b ** 2);
+	return distance;
 }

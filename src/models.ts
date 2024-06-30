@@ -1,6 +1,6 @@
 import { FOV, NEAR_CLIPPING_PLANE } from "./constants";
 
-export type Scene = Array<Array<number>>;
+export type Scene = Array<Array<string | null>>;
 
 export class Vector2D {
 	x: number;
@@ -57,6 +57,10 @@ export class Vector2D {
 	// Linear Interpolation (lerp)
 	lerp(that: Vector2D, t: number): Vector2D {
 		return that.subtract(this).scale(t).add(this);
+	}
+
+	dotProduct(that: Vector2D): number {
+		return this.x * that.x + this.y * that.y;
 	}
 }
 
