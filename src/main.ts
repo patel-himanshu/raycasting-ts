@@ -4,11 +4,16 @@ import {
 	createRectangle,
 	getCanvasSize,
 } from "./canvas";
-import { CANVAS_BACKGROUND, POINT_RADIUS, LINE_WIDTH } from "./constants";
-import { hittingCellCorner, rayStep } from "./helpers";
-import { Scene, Vector2D } from "./models";
+import {
+	CANVAS_BACKGROUND,
+	POINT_RADIUS,
+	LINE_WIDTH,
+	NEAR_CLIPPING_PLANE,
+	FOV,
+} from "./constants";
+import { Player, Scene, Vector2D } from "./models";
 
-function sceneSize(scene: Scene): Vector2D {
+function getSceneSize(scene: Scene): Vector2D {
 	const rows = scene.length;
 	const columns = scene.reduce((maxColumns, row) => {
 		return Math.max(maxColumns, row.length);
@@ -19,17 +24,16 @@ function sceneSize(scene: Scene): Vector2D {
 function renderMinimap(
 	context: CanvasRenderingContext2D,
 	scene: Scene,
-	point1: Vector2D,
-	point2: Vector2D | undefined,
+	player: Player,
 	offset: Vector2D,
 	size: Vector2D
 ) {
-	context.reset();
+	context.save();
 
 	context.fillStyle = CANVAS_BACKGROUND;
 	context.fillRect(0, 0, context.canvas.width, context.canvas.height);
 
-	const gridSize = sceneSize(scene);
+	const gridSize = getSceneSize(scene);
 	const [gridColumns, gridRows] = [gridSize.x, gridSize.y];
 
 	const cellSize = size.divide(gridSize);
@@ -58,32 +62,35 @@ function renderMinimap(
 		createLine(context, new Vector2D(0, y), new Vector2D(gridColumns, y));
 	}
 
-	createCircle(context, point1, POINT_RADIUS, "orange");
+	createCircle(context, player.position, POINT_RADIUS, "orange");
 
-	if (point2 !== undefined) {
-		for (;;) {
-			createCircle(context, point2, POINT_RADIUS, "orange");
-			createLine(context, point1, point2, LINE_WIDTH, "orange");
+	const perpendicularDistance = NEAR_CLIPPING_PLANE * Math.tan(FOV * 0.5);
+	const p = player.position.add(
+		Vector2D.angle(player.direction).scale(NEAR_CLIPPING_PLANE)
+	);
 
-			const cell = hittingCellCorner(point1, point2);
+	const p1 = p.add(
+		p
+			.subtract(player.position)
+			.rotate90()
+			.normalize()
+			.scale(perpendicularDistance)
+	);
+	const p2 = p.subtract(
+		p
+			.subtract(player.position)
+			.rotate90()
+			.normalize()
+			.scale(perpendicularDistance)
+	);
 
-			// Check if the cell hitting the ray is out of the grid
-			if (
-				cell.x < 0 ||
-				cell.x >= gridSize.x ||
-				cell.y < 0 ||
-				cell.y >= gridSize.y ||
-				scene[cell.y][cell.x] !== 0
-			) {
-				break;
-			}
+	createLine(context, player.position, p, LINE_WIDTH, "blue");
+	createLine(context, p, p1, LINE_WIDTH, "red");
+	createLine(context, player.position, p1, LINE_WIDTH, "red");
+	createLine(context, p, p2, LINE_WIDTH, "red");
+	createLine(context, player.position, p2, LINE_WIDTH, "red");
 
-			const point3 = rayStep(point1, point2);
-
-			point1 = point2;
-			point2 = point3;
-		}
-	}
+	context.restore();
 }
 
 (() => {
@@ -112,30 +119,16 @@ function renderMinimap(
 		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	];
+	const sceneSize = getSceneSize(scene);
 
-	const point1 = new Vector2D(0.45, 0.5).multiply(sceneSize(scene));
-	let point2: Vector2D | undefined = undefined;
+	const player = new Player(
+		new Vector2D(0.45, 0.5).multiply(sceneSize),
+		Math.PI * 1.25
+	);
 
 	const canvasSize = getCanvasSize(context);
 	const minimapOffset = new Vector2D().add(canvasSize).scale(0.025);
-	const minimapSize = sceneSize(scene).scale(context.canvas.width * 0.05);
+	const minimapSize = sceneSize.scale(context.canvas.width * 0.09);
 
-	gameCanvas.addEventListener("mousemove", (event) => {
-		point2 = new Vector2D(event.offsetX, event.offsetY)
-			.subtract(minimapOffset)
-			.divide(minimapSize)
-			.multiply(sceneSize(scene));
-
-		renderMinimap(
-			context,
-			scene,
-			point1,
-			point2,
-			minimapOffset,
-			minimapSize
-		);
-	});
-
-	// Necessary for first render, when point2 is undefined
-	renderMinimap(context, scene, point1, point2, minimapOffset, minimapSize);
+	renderMinimap(context, scene, player, minimapOffset, minimapSize);
 })();

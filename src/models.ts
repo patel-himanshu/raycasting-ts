@@ -9,6 +9,10 @@ export class Vector2D {
 		this.y = y;
 	}
 
+	static angle(angle: number): Vector2D {
+		return new Vector2D(Math.cos(angle), Math.sin(angle));
+	}
+
 	add(that: Vector2D): Vector2D {
 		return new Vector2D(this.x + that.x, this.y + that.y);
 	}
@@ -42,5 +46,19 @@ export class Vector2D {
 	distanceTo(that: Vector2D): number {
 		// return Math.sqrt((this.x - that.x) ** 2 + (this.y - that.y) ** 2);
 		return this.subtract(that).length();
+	}
+
+	rotate90(): Vector2D {
+		return new Vector2D(-this.y, this.x);
+	}
+}
+
+export class Player {
+	position: Vector2D;
+	direction: number;
+
+	constructor(position: Vector2D, direction: number) {
+		this.position = position;
+		this.direction = direction;
 	}
 }
