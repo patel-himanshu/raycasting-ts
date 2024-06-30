@@ -1,3 +1,5 @@
+import { FOV, NEAR_CLIPPING_PLANE } from "./constants";
+
 export type Scene = Array<Array<number>>;
 
 export class Vector2D {
@@ -51,6 +53,11 @@ export class Vector2D {
 	rotate90(): Vector2D {
 		return new Vector2D(-this.y, this.x);
 	}
+
+	// Linear Interpolation (lerp)
+	lerp(that: Vector2D, t: number): Vector2D {
+		return that.subtract(this).scale(t).add(this);
+	}
 }
 
 export class Player {
@@ -60,5 +67,28 @@ export class Player {
 	constructor(position: Vector2D, direction: number) {
 		this.position = position;
 		this.direction = direction;
+	}
+
+	fovRange(): [Vector2D, Vector2D] {
+		const perpendicularDistance = NEAR_CLIPPING_PLANE * Math.tan(FOV * 0.5);
+		const p = this.position.add(
+			Vector2D.angle(this.direction).scale(NEAR_CLIPPING_PLANE)
+		);
+
+		const p1 = p.subtract(
+			p
+				.subtract(this.position)
+				.rotate90()
+				.normalize()
+				.scale(perpendicularDistance)
+		);
+		const p2 = p.add(
+			p
+				.subtract(this.position)
+				.rotate90()
+				.normalize()
+				.scale(perpendicularDistance)
+		);
+		return [p1, p2];
 	}
 }

@@ -8,17 +8,50 @@ import {
 	CANVAS_BACKGROUND,
 	POINT_RADIUS,
 	LINE_WIDTH,
-	NEAR_CLIPPING_PLANE,
-	FOV,
+	SCREEN_WIDTH,
+	FAR_CLIPPING_PLANE,
+	PLAYER_STEP_LENGTH,
 } from "./constants";
+import {
+	castRay,
+	getSceneSize,
+	hittingCellCorner,
+	isPointInsideScene,
+} from "./helpers";
 import { Player, Scene, Vector2D } from "./models";
 
-function getSceneSize(scene: Scene): Vector2D {
-	const rows = scene.length;
-	const columns = scene.reduce((maxColumns, row) => {
-		return Math.max(maxColumns, row.length);
-	}, 0);
-	return new Vector2D(columns, rows);
+function renderPlayerPerspective(
+	context: CanvasRenderingContext2D,
+	scene: Scene,
+	player: Player
+) {
+	const stripWidth = Math.ceil(context.canvas.width / SCREEN_WIDTH);
+	const [rangeStart, rangeEnd] = player.fovRange();
+
+	for (let x = 0; x < SCREEN_WIDTH; x++) {
+		const point = castRay(
+			scene,
+			player.position,
+			rangeStart.lerp(rangeEnd, x / SCREEN_WIDTH)
+		);
+		const cell = hittingCellCorner(player.position, point);
+
+		if (isPointInsideScene(scene, cell) && scene[cell.y][cell.x] !== 0) {
+			const t =
+				1 -
+				point.subtract(player.position).length() / FAR_CLIPPING_PLANE;
+			const stripHeight = t * context.canvas.height;
+
+			createRectangle(
+				context,
+				x * stripWidth,
+				(context.canvas.height - stripHeight) * 0.5,
+				stripWidth,
+				stripHeight,
+				`rgba(${255 * t}, 0, 0, 1)`
+			);
+		}
+	}
 }
 
 function renderMinimap(
@@ -30,9 +63,6 @@ function renderMinimap(
 ) {
 	context.save();
 
-	context.fillStyle = CANVAS_BACKGROUND;
-	context.fillRect(0, 0, context.canvas.width, context.canvas.height);
-
 	const gridSize = getSceneSize(scene);
 	const [gridColumns, gridRows] = [gridSize.x, gridSize.y];
 
@@ -40,6 +70,8 @@ function renderMinimap(
 	const [cellWidth, cellHeight] = [cellSize.x, cellSize.y];
 	context.translate(offset.x, offset.y);
 	context.scale(cellWidth, cellHeight);
+
+	createRectangle(context, 0, 0, gridSize.x, gridSize.y, CANVAS_BACKGROUND);
 
 	// Origin is the top-left corner of the grid
 	// Left to right is the movement in the positive x-axis
@@ -64,33 +96,25 @@ function renderMinimap(
 
 	createCircle(context, player.position, POINT_RADIUS, "orange");
 
-	const perpendicularDistance = NEAR_CLIPPING_PLANE * Math.tan(FOV * 0.5);
-	const p = player.position.add(
-		Vector2D.angle(player.direction).scale(NEAR_CLIPPING_PLANE)
-	);
-
-	const p1 = p.add(
-		p
-			.subtract(player.position)
-			.rotate90()
-			.normalize()
-			.scale(perpendicularDistance)
-	);
-	const p2 = p.subtract(
-		p
-			.subtract(player.position)
-			.rotate90()
-			.normalize()
-			.scale(perpendicularDistance)
-	);
-
-	createLine(context, player.position, p, LINE_WIDTH, "blue");
-	createLine(context, p, p1, LINE_WIDTH, "red");
+	const [p1, p2] = player.fovRange();
 	createLine(context, player.position, p1, LINE_WIDTH, "red");
-	createLine(context, p, p2, LINE_WIDTH, "red");
 	createLine(context, player.position, p2, LINE_WIDTH, "red");
+	createLine(context, p1, p2, LINE_WIDTH, "red");
 
 	context.restore();
+}
+
+function renderGame(
+	context: CanvasRenderingContext2D,
+	scene: Scene,
+	player: Player,
+	minimapOffset: Vector2D,
+	minimapSize: Vector2D
+): void {
+	context.fillStyle = CANVAS_BACKGROUND;
+	context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+	renderPlayerPerspective(context, scene, player);
+	renderMinimap(context, scene, player, minimapOffset, minimapSize);
 }
 
 (() => {
@@ -121,14 +145,46 @@ function renderMinimap(
 	];
 	const sceneSize = getSceneSize(scene);
 
+	const canvasSize = getCanvasSize(context);
+	const minimapOffset = new Vector2D().add(canvasSize).scale(0.025);
+	const minimapSize = sceneSize.scale(context.canvas.width * 0.04);
+
 	const player = new Player(
 		new Vector2D(0.45, 0.5).multiply(sceneSize),
 		Math.PI * 1.25
 	);
 
-	const canvasSize = getCanvasSize(context);
-	const minimapOffset = new Vector2D().add(canvasSize).scale(0.025);
-	const minimapSize = sceneSize.scale(context.canvas.width * 0.09);
+	window.addEventListener("keydown", (event) => {
+		switch (event.code) {
+			case "KeyW": {
+				const movement = Vector2D.angle(player.direction).scale(
+					PLAYER_STEP_LENGTH
+				);
+				player.position = player.position.add(movement);
+				renderGame(context, scene, player, minimapOffset, minimapSize);
+				break;
+			}
+			case "KeyS": {
+				const movement = Vector2D.angle(player.direction).scale(
+					PLAYER_STEP_LENGTH
+				);
+				player.position = player.position.subtract(movement);
+				renderGame(context, scene, player, minimapOffset, minimapSize);
+				break;
+			}
+			case "KeyA": {
+				player.direction -= Math.PI * 0.01;
+				renderGame(context, scene, player, minimapOffset, minimapSize);
+				break;
+			}
+			case "KeyD": {
+				player.direction += Math.PI * 0.01;
+				renderGame(context, scene, player, minimapOffset, minimapSize);
+				break;
+			}
+		}
+	});
 
-	renderMinimap(context, scene, player, minimapOffset, minimapSize);
+	// Necessary for the first render
+	renderGame(context, scene, player, minimapOffset, minimapSize);
 })();

@@ -1,5 +1,23 @@
 import { EPSILON } from "./constants";
-import { Vector2D } from "./models";
+import { Scene, Vector2D } from "./models";
+
+export function getSceneSize(scene: Scene): Vector2D {
+	const rows = scene.length;
+	const columns = scene.reduce((maxColumns, row) => {
+		return Math.max(maxColumns, row.length);
+	}, 0);
+	return new Vector2D(columns, rows);
+}
+
+export function isPointInsideScene(scene: Scene, point: Vector2D): boolean {
+	const sceneSize = getSceneSize(scene);
+	return (
+		0 <= point.x &&
+		point.x < sceneSize.x &&
+		0 <= point.y &&
+		point.y < sceneSize.y
+	);
+}
 
 /**
  * Snaps the given component of the "Vector2D" object to the closest point on the grid's cell boundaries.
@@ -84,4 +102,22 @@ export function rayStep(point1: Vector2D, point2: Vector2D): Vector2D {
 	}
 
 	return point3;
+}
+
+export function castRay(
+	scene: Scene,
+	point1: Vector2D,
+	point2: Vector2D
+): Vector2D {
+	for (;;) {
+		const cell = hittingCellCorner(point1, point2);
+		if (!isPointInsideScene(scene, cell) || scene[cell.y][cell.x] !== 0)
+			break;
+
+		const point3 = rayStep(point1, point2);
+		point1 = point2;
+		point2 = point3;
+	}
+
+	return point2;
 }
